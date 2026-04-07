@@ -53,3 +53,8 @@ UIの改善（視覚的な比較・グラフ表示など）
 ## 開発メモ
 - [意思決定ログ](docs/decisions.md)
 - [学んだことログ](docs/learnings.md)
+
+## アプリ画面
+
+![アプリ画面](images/keiba_app_in.png)
+![アプリ画面](images/keiba_app_out.png)
