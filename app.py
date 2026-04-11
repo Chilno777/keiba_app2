@@ -25,6 +25,7 @@ st.set_page_config(page_title="競馬 指数・期待値アプリ", layout="wide
 # 【3】必要な列名・任意列名・表示名の定義
 # ============================================
 REQUIRED_COLUMNS = [
+    "horse_number", 
     "horse_name",
     "win_odds",
     "place_odds",
@@ -37,6 +38,7 @@ REQUIRED_COLUMNS = [
 OPTIONAL_COLUMNS = ["memo"]
 
 DISPLAY_NAME_MAP = {
+    "horse_number": "馬番",
     "horse_name": "馬名",
     "win_odds": "単勝オッズ",
     "place_odds": "複勝オッズ",
@@ -408,6 +410,7 @@ edited_df = st.data_editor(
     use_container_width=True,
     hide_index=True,
     column_config={
+        "horse_number": st.column_config.NumberColumn("馬番", min_value=1, step=1),
         "horse_name": st.column_config.TextColumn("馬名", required=True),
         "win_odds": st.column_config.NumberColumn("単勝オッズ", min_value=0.01, step=0.1),
         "place_odds": st.column_config.NumberColumn("複勝オッズ", min_value=0.01, step=0.1),
@@ -481,7 +484,7 @@ for _, row in top_df.iterrows():
 <div style="background:{bg_color}; border-left:8px solid {border_color}; border-radius:14px; padding:18px 20px; margin-bottom:14px; box-shadow:0 2px 10px rgba(0,0,0,0.08);">
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
     <div style="font-size:30px; font-weight:800; color:#111827;">
-      {row['horse_name']}
+      {int(row['horse_number'])}番 {row['horse_name']}
     </div>
     <div style="font-size:18px; font-weight:700; color:{border_color};">
       {badge}
@@ -506,6 +509,7 @@ st.subheader("計算結果")
 st.info(f"単勝率合計: {result_df['win_prob'].sum():.1f}%")
 
 display_cols = [
+    "horse_number",
     "horse_name",
     "contrib_performance",
     "contrib_bias",
@@ -550,7 +554,7 @@ col1, col2 = st.columns(2)
 with col1:
     st.subheader("単勝 買い候補")
     buy_win_df = result_df[result_df["ev_win"] >= ev_threshold][
-        ["horse_name", "total_index", "win_prob", "ev_win", "judge_win"]
+        ["horse_number", "horse_name", "total_index", "win_prob", "ev_win", "judge_win"]
     ].copy()
     buy_win_df = rename_for_display(buy_win_df)
 
@@ -596,6 +600,7 @@ with col2:
 st.subheader("ダウンロード")
 
 download_cols = [
+    "horse_number",
     "horse_name",
     "win_odds",
     "place_odds",
