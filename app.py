@@ -58,6 +58,12 @@ DISPLAY_NAME_MAP = {
     "ev_place": "複勝期待値",
     "judge_win": "単勝判定",
     "judge_place": "複勝判定",
+    "race_std": "指数標準偏差",
+    "gap_1_2": "1位-2位差",
+    "gap_1_3": "1位-3位差",
+    "gap_3_4": "3位-4位差",
+    "race_type": "レース分類",
+    "kensen_level": "混戦度",
 }
 
 
@@ -307,6 +313,41 @@ def calculate_scores(
     result["win_prob"] = result["win_prob"] * 100
     result["place_prob"] = result["place_prob"] * 100
 
+    # =========================
+    # 混戦度計算
+    # =========================
+    sorted_idx = result["total_index"].sort_values(ascending=False).reset_index(drop=True)
+
+    race_std = float(sorted_idx.std(ddof=0))
+    gap_1_2 = float(sorted_idx.iloc[0] - sorted_idx.iloc[1]) if len(sorted_idx) >= 2 else 0.0
+    gap_1_3 = float(sorted_idx.iloc[0] - sorted_idx.iloc[2]) if len(sorted_idx) >= 3 else 0.0
+    gap_3_4 = float(sorted_idx.iloc[2] - sorted_idx.iloc[3]) if len(sorted_idx) >= 4 else 0.0
+
+    STD_CLOSE = 0.35
+    GAP12_STRONG = 0.25
+    GAP13_CLOSE = 0.30
+    GAP34_SEPARATE = 0.20
+
+    if gap_1_3 < GAP13_CLOSE and gap_3_4 >= GAP34_SEPARATE:
+        race_type = "上位集中"
+        kensen_level = "中"
+    elif race_std < STD_CLOSE and gap_3_4 < GAP34_SEPARATE:
+        race_type = "全体混戦"
+        kensen_level = "高"
+    elif gap_1_2 >= GAP12_STRONG:
+        race_type = "単勝向き"
+        kensen_level = "低"
+    else:
+        race_type = "中間型"
+        kensen_level = "中"
+
+    result["race_std"] = race_std
+    result["gap_1_2"] = gap_1_2
+    result["gap_1_3"] = gap_1_3
+    result["gap_3_4"] = gap_3_4
+    result["race_type"] = race_type
+    result["kensen_level"] = kensen_level
+
     # 並び順は指数順
     result = result.sort_values(by="total_index", ascending=False).reset_index(drop=True)
 
@@ -456,6 +497,12 @@ result_df = calculate_scores(
     ev_threshold=ev_threshold,
 )
 
+# レース診断UI
+st.subheader("レース診断")
+
+st.write(f"混戦度: {result_df['kensen_level'].iloc[0]}")
+st.write(f"レース分類: {result_df['race_type'].iloc[0]}")
+
 
 # ============================================
 # 【21】注目馬カード表示
@@ -523,6 +570,12 @@ display_cols = [
     "judge_win",
     "judge_place",
     "memo",
+    "race_std",
+    "gap_1_2",
+    "gap_1_3",
+    "gap_3_4",
+    "race_type",
+    "kensen_level",
 ]
 
 display_df = result_df[display_cols].copy()
