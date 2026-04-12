@@ -689,10 +689,19 @@ download_cols = [
 download_df = result_df[download_cols].copy()
 csv_bytes = to_csv_download_bytes(download_df)
 
+# アップロードファイル名を取得（拡張子除く）
+if uploaded_file is not None:
+    base_name = uploaded_file.name.rsplit(".", 1)[0]
+else:
+    base_name = "keiba"
+
+# beta / epsilon をファイル名に追加（小数点は見やすく整形）
+file_name = f"{base_name}_b{beta:.2f}_e{epsilon:.2f}_result.csv"
+
 st.download_button(
     "計算結果CSVをダウンロード",
     data=csv_bytes,
-    file_name="keiba_result.csv",
+    file_name=file_name,
     mime="text/csv",
 )
 
@@ -718,16 +727,6 @@ elif beta < 2.0:
     beta_comment = "beta は中くらいです。上位馬を適度に評価します。"
 else:
     beta_comment = "beta は高めです。上位馬にかなり勝率が寄ります。"
-
-if epsilon < 0.08:
-    e_comment = "epsilon は低めです。かなり能力重視です。"
-elif epsilon < 0.18:
-    e_comment = "epsilon は中くらいです。少し紛れを考慮しています。"
-else:
-    e_comment = "epsilon は高めです。展開や紛れを強めに見ています。"
-
-st.write(f"- {beta_comment}")
-st.write(f"- {e_comment}")
 
 if epsilon < 0.08:
     e_comment = "epsilon は低めです。かなり能力重視です。"
