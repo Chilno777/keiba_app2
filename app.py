@@ -502,7 +502,10 @@ st.subheader("レース診断")
 
 st.write(f"混戦度: {result_df['kensen_level'].iloc[0]}")
 st.write(f"レース分類: {result_df['race_type'].iloc[0]}")
-
+st.write(f"指数標準偏差: {result_df['race_std'].iloc[0]:.2f}")
+st.write(f"1位-2位差: {result_df['gap_1_2'].iloc[0]:.2f}")
+st.write(f"1位-3位差: {result_df['gap_1_3'].iloc[0]:.2f}")
+st.write(f"3位-4位差: {result_df['gap_3_4'].iloc[0]:.2f}")
 
 # ============================================
 # 【21】注目馬カード表示
