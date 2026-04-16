@@ -277,6 +277,45 @@ def calculate_scores(
     )
 
     # --------------------------------------------
+    # beta の推奨値（診断用）
+    # 勝率計算には使わない
+    # --------------------------------------------
+    sorted_idx = result["total_index"].sort_values(ascending=False).reset_index(drop=True)
+
+    race_std = float(sorted_idx.std(ddof=0))
+    gap_1_2 = float(sorted_idx.iloc[0] - sorted_idx.iloc[1]) if len(sorted_idx) >= 2 else 0.0
+    gap_1_3 = float(sorted_idx.iloc[0] - sorted_idx.iloc[2]) if len(sorted_idx) >= 3 else 0.0
+    gap_3_4 = float(sorted_idx.iloc[2] - sorted_idx.iloc[3]) if len(sorted_idx) >= 4 else 0.0
+
+    # 判定用閾値（仮）
+    BETA_STD_CLOSE = 0.35
+    BETA_GAP12_STRONG = 0.25
+    BETA_GAP13_TOP = 0.30
+    BETA_GAP34_CLOSE = 0.20
+    BETA_GAP34_SEPARATE = 0.20
+
+    # 判定ロジック（診断用）
+    if gap_1_2 >= BETA_GAP12_STRONG:
+        beta_eff = beta + 0.40
+        beta_reason = "1強"
+    elif race_std < BETA_STD_CLOSE and gap_3_4 < BETA_GAP34_CLOSE:
+        beta_eff = beta - 0.35
+        beta_reason = "全体混戦"
+    elif gap_1_3 < BETA_GAP13_TOP and gap_3_4 >= BETA_GAP34_SEPARATE:
+        beta_eff = beta + 0.20
+        beta_reason = "上位集中"
+    else:
+        beta_eff = beta
+        beta_reason = "中間型"
+
+    # 安全のためクリップ
+    beta_eff = float(np.clip(beta_eff, 0.8, 2.5))
+
+    # 表示用に保存（ここ重要）
+    result["beta_eff"] = beta_eff
+    result["beta_reason"] = beta_reason
+
+    # --------------------------------------------
     # メイン確率（能力）
     # 指数をレース内で標準化してから softmax
     # beta を大きくすると上位馬に勝率が寄る
@@ -758,3 +797,9 @@ st.dataframe(
     ),
     use_container_width=True,
 )
+
+st.markdown("### 🧠 推奨beta（診断）")
+
+st.write(f"現在のbeta: {beta:.2f}")
+st.write(f"推奨beta: {result_df['beta_eff'].iloc[0]:.2f}")
+st.write(f"判定: {result_df['beta_reason'].iloc[0]}")
